@@ -8,7 +8,7 @@ season = sys.argv[1]
 gameId = sys.argv[2]
 
 awayPage = requests.get('http://www.nhl.com/scores/htmlreports/' + season + str(int(season) + 1) + '/TV0' + gameId + '.HTM')
-#awayPage = requests.get('http://www.nhl.com/scores/htmlreports/20142015/TV030227.HTM')
+# awayPage = requests.get('http://www.nhl.com/scores/htmlreports/20142015/TV030227.HTM')
 awayTree = html.fromstring(awayPage.text)
 awayPlayerTokens = awayTree.xpath('//table/tr[position()=4]/td/table/tr/td[@class="playerHeading + border"]/text()')
 
