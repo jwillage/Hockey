@@ -7,7 +7,7 @@ season = sys.argv[1]
 gameId = sys.argv[2]
 
 page = requests.get('http://www.nhl.com/scores/htmlreports/' + season + str(int(season) + 1) + '/PL0' + gameId + '.HTM')
-#page = requests.get('http://www.nhl.com/scores/htmlreports/20142015/PL030227.HTM')
+# page = requests.get('http://www.nhl.com/scores/htmlreports/20142015/PL030227.HTM')
 tree = html.fromstring(page.text)
 teams = tree.xpath('//td[@class="heading + bborder"][@align="center"][@width="10%"]')
 awayName, homeName = teams[0].text[0 : 3], teams[1].text[0 : 3]
