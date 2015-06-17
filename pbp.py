@@ -20,7 +20,7 @@ while x < len(tokens):
 	temp = tokens[x:x + 6]
 	splitList = tokens[x + 6].split(' ')
 	playerPos = [ i for i, word in enumerate(splitList) if word.startswith('#') ]
-	if temp[5] == 'SHOT':	
+	if temp[5] == 'SHOT':
 		temp.append(splitList[0]) #shooting team
 		if splitList[playerPos[0] + 1].endswith(','):	#single word player
 			temp.append(splitList[playerPos[0] + 1][0 : -1])
@@ -183,11 +183,13 @@ while x < len(tokens):
 
 f = open("/mnt/hgfs/VM/" + season + "_" + gameId + "_pbp", 'w')
 cnt = 0
-f.write('season,gameId,id,per,strength,elapsed,remaining,event,primaryTeam,primaryPlayer,secondaryTeam,secondaryPlayer,zone,shotType,distance,miss,stop,penType,penTime,firstAssist,secondAssist\r\n')
+f.write('season,gameId,totalElapsed,id,per,strength,elapsed,remaining,event,primaryTeam,primaryPlayer,secondaryTeam,secondaryPlayer,zone,shotType,distance,miss,stop,penType,penTime,firstAssist,secondAssist\r\n')
 
 while cnt < len(plays):
 	fieldCnt = 0
-	f.write(season + ', ' + gameId + ', ')
+	f.write(season + ', ' + gameId + ', ' )
+	#convert period elapsed time to game elapsed time
+	f.write(str(((int(plays[cnt][1])-1)*20) +  int(plays[cnt][3][0 : plays[cnt][3].index(':')])) + ':' + 	str(plays[cnt][3][plays[cnt][3].index(':') + 1 : ]) + ', ')
 	while fieldCnt < len(plays[cnt]):
 		f.write(plays[cnt][fieldCnt].encode('utf-8'))
 		if fieldCnt != len(plays[cnt])- 1:
