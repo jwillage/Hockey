@@ -40,6 +40,5 @@ Column | Description
 
 ###To Do
 * Implement default arguments for testing purposes, or gracefully return error
-* Add a column that represents the elapsed/remaining for the entire game, not just the period
 
 
