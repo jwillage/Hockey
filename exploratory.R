@@ -36,7 +36,6 @@ eventPlot <- function(pbp.in, evnt, strn){
   pbp.sub <- as.data.frame(pbp.sub)
   
   # Append dummy row to continue line to end of game and from 0 to first event
-  # For FAC, only add 0 for team that doesn't win opening facoff
   for (i in c(away, home)){
     apnd <- pbp.sub[1, ]
     apnd$evNum <- ifelse(nrow(pbp.sub[pbp.sub$primaryTeam == i, ]) > 0,
@@ -46,6 +45,9 @@ eventPlot <- function(pbp.in, evnt, strn){
     apnd$totalElapsed <- max(pbp.in$totalElapsed) 
     apnd$primaryTeam <- i
     pbp.sub <- rbind(pbp.sub, apnd)
+    # If looking at faceoffs, don't append 0th event for team that wins opening draw
+    if (("FAC" %in% evnt & pbp.in[2, "primaryTeam"] == i))
+      break
     apnd$evNum <- 0
     apnd$totalElapsed <- 0
     pbp.sub <- rbind(pbp.sub, apnd)
@@ -76,8 +78,7 @@ eventPlot <- function(pbp.in, evnt, strn){
           plot.background = element_rect(fill = "white", color = "white"),
           plot.title = element_text(size = 18)) +
     scale_x_continuous(expand = c(0, .5)) +
-    scale_y_continuous(expand = c(0, .5)) 
-  
+    scale_y_continuous(expand = c(0, max(pbp.sub$evNum))/300) 
 }
 
 season <- 2015
@@ -89,7 +90,6 @@ info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors 
 
 home <- info$home
 away <- info$away
-teams <- c(away, home)
 
 # Create vector of each team's primary color for viz
 team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422", 
@@ -104,4 +104,4 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 VAN = "#047A4A", WSH = "#CF132B", WPG = "#002E62")
 color.DF <- data.frame(team = as.factor(names(team.colors)), color = team.colors)
 
-eventPlot(pbp, "MISS", "SH")
+eventPlot(pbp, "MISS", "EV")
