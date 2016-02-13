@@ -8,11 +8,13 @@ season = sys.argv[1]
 gameId = sys.argv[2]
 
 page = requests.get('http://www.nhl.com/scores/htmlreports/' + season + str(int(season) + 1) + '/PL0' + gameId + '.HTM')
-# page = requests.get('http://www.nhl.com/scores/htmlreports/20142015/PL030226.HTM')
+# page = requests.get('http://www.nhl.com/scores/htmlreports/20152016/PL020783.HTM')
 tree = html.fromstring(page.text)
 tokens = tree.xpath('//tr[@class="evenColor"]/td/text()')
 away = tree.xpath('//table[position()=1]/tr[position()=3]/td[position()=7]/text()')[0][0:3]
 home = tree.xpath('//table[position()=1]/tr[position()=3]/td[position()=8]/text()')[0][0:3]
+date = tree.xpath('//table/tr/td/table/tr/td/table/tr/td[position()=2]/table/' \
+'tr[position()=4]/td/text()')[1].split(', ', 1)[1]
 plays = []
 temp=[]
 
@@ -185,8 +187,8 @@ while x < len(tokens):
 
 info = open('/Users/jw186027/Documents/Personal/Analytics/Sports/Hockey/pbp/' + season + '_' + 
 gameId + '.info', 'w')
-info.write('season,gameId,home,away\r\n')
-info.write(season + ',' + gameId + ',' + home + ',' + away + '\r\n')
+info.write('season,gameId,date,home,away\r\n')
+info.write(season + ',' + gameId + ',' + '"' + date + '",' + home + ',' + away + '\r\n')
 info.close()
 
 # f = open('/mnt/hgfs/VM/' + season + '_' + gameId + '_pbp', 'w')

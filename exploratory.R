@@ -15,6 +15,7 @@ eventPlot <- function(pbp.in, evnt, strn){
   # TODO:
   #  Add option for penalties as a colored span
   #  Add optl parm to add vline for given event
+  #  option for strn == "ALL"
   
   events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "corsi", "fenwick")
 
@@ -35,9 +36,13 @@ eventPlot <- function(pbp.in, evnt, strn){
   pbp.sub <- as.data.frame(pbp.sub)
   
   # Append dummy row to continue line to end of game and from 0 to first event
-  for (i in teams){
+  # For FAC, only add 0 for team that doesn't win opening facoff
+  for (i in c(away, home)){
     apnd <- pbp.sub[1, ]
-    apnd$evNum <- with(subset(pbp.sub, primaryTeam == i), max(evNum))
+    apnd$evNum <- ifelse(nrow(pbp.sub[pbp.sub$primaryTeam == i, ]) > 0,
+                         max(pbp.sub[pbp.sub$primaryTeam == i, "evNum"]), 
+                         0
+                  )
     apnd$totalElapsed <- max(pbp.in$totalElapsed) 
     apnd$primaryTeam <- i
     pbp.sub <- rbind(pbp.sub, apnd)
@@ -55,8 +60,9 @@ eventPlot <- function(pbp.in, evnt, strn){
     scale_color_manual(values = team.colors[goals$team]) +
     geom_vline(data = goals, aes(xintercept = goalTime), color = team.colors[goals$team], 
                linetype = "longdash") +
-    ggtitle(paste0(paste0(teams, collapse = " @ "), " Game ", gameId, "\n", 
-                   tolower(paste(paste0(evnt, collapse = ", "))), " count by game time")) +
+    ggtitle(paste(away, "@", home, info$date, "\n", 
+                   tolower(paste(paste0(evnt, collapse = ", "))), "count by game time,",
+                   strn, "strength")) +
     ylab(paste(tolower(paste0(evnt, collapse = ", ")), "count")) +
     xlab("Game time") +
     theme(legend.position = c(0, 1), 
@@ -98,4 +104,4 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 VAN = "#047A4A", WSH = "#CF132B", WPG = "#002E62")
 color.DF <- data.frame(team = as.factor(names(team.colors)), color = team.colors)
 
-eventPlot(pbp, "fenwick", "EV")
+eventPlot(pbp, "MISS", "SH")
