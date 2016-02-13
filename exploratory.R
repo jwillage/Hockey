@@ -5,17 +5,28 @@ eventPlot <- function(pbp.in, evnt, strn){
   #
   # Args:
   #   pbp.in:     pbp object
-  #   evnt:       Character vector of event(s) to report on. Valid options are "goal", "fac", 
-  #               "penl", "block", "shot", "miss", "give"
+  #   evnt:       Character vector of event(s) to report on. Valid options are "GOAL", "FAC", 
+  #               "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "corsi", "fenwick"
   #   strn:       Strength. Valid options are "EV", "SH", "PP"
   #
   # Returns:
   #  Plots a graph of event comparison by team
   #
   # TODO:
-  #  Add vlines at PEND markers
-  #  Error check parms, convert "corsi", "fenwick", etc to literals
   #  Add option for penalties as a colored span
+  #  Add optl parm to add vline for given event
+  
+  events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "corsi", "fenwick")
+
+  if (! evnt %in% events){
+    stop("Event not found in play by play")
+  }
+  
+  if (evnt == "corsi"){
+    evnt <- c("SHOT", "MISS", "BLOCK", "GOAL")
+  }   else if (evnt == "fenwick"){
+    evnt <- c("SHOT", "MISS", "GOAL")
+  }
   
   pbp.in$totalElapsed <- as.numeric(gsub(":", ".", pbp.in$totalElapsed))
   # Cumulatively count all the events by primary team
@@ -39,11 +50,11 @@ eventPlot <- function(pbp.in, evnt, strn){
                       team = pbp.in[pbp.in$event == "GOAL", "primaryTeam"], 
                       stringsAsFactors = FALSE)
   ggplot(data = pbp.sub, aes(totalElapsed, evNum, color = primaryTeam)) + 
+    geom_vline(xintercept = pbp.in[pbp.in$event == "PEND", "totalElapsed"], color = "lightgrey") +
     geom_step(size = 1) + 
     scale_color_manual(values = team.colors[goals$team]) +
     geom_vline(data = goals, aes(xintercept = goalTime), color = team.colors[goals$team], 
                linetype = "longdash") +
-    geom_vline(xintercept = pbp.in[pbp.in$event == "PEND", "totalElapsed"], color = "lightgrey") +
     ggtitle(paste0(paste0(teams, collapse = " @ "), " Game ", gameId, "\n", 
                    tolower(paste(paste0(evnt, collapse = ", "))), " count by game time")) +
     ylab(paste(tolower(paste0(evnt, collapse = ", ")), "count")) +
@@ -87,5 +98,4 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 VAN = "#047A4A", WSH = "#CF132B", WPG = "#002E62")
 color.DF <- data.frame(team = as.factor(names(team.colors)), color = team.colors)
 
-corsi <- c("SHOT", "MISS", "BLOCK", "GOAL")
-eventPlot(pbp, corsi, "EV")
+eventPlot(pbp, "fenwick", "EV")
