@@ -1,11 +1,11 @@
 library(dplyr)
 
-eventPlot <- function(pbp.in, event, strn){
+eventPlot <- function(pbp.in, evnt, strn){
   # Plot comparison graph given the event type and strength
   #
   # Args:
   #   pbp.in:     pbp object
-  #   event:       Character vector of event(s) to report on. Valid options are "goal", "fac", 
+  #   evnt:       Character vector of event(s) to report on. Valid options are "goal", "fac", 
   #               "penl", "block", "shot", "miss", "give"
   #   strn:       Strength. Valid options are "EV", "SH", "PP"
   #
@@ -19,36 +19,48 @@ eventPlot <- function(pbp.in, event, strn){
   
   pbp.in$totalElapsed <- as.numeric(gsub(":", ".", pbp.in$totalElapsed))
   # Cumulatively count all the events by primary team
-  pbp.sub <- pbp.in %>%  filter(event %in% event, strength == strn) %>% group_by(primaryTeam) %>% 
+  pbp.sub <- pbp.in %>%  filter(event %in% evnt, strength == strn) %>% group_by(primaryTeam) %>% 
     mutate(evNum = row_number())
   pbp.sub <- as.data.frame(pbp.sub)
   
-  # Append dummy row to continue line to end of game
+  # Append dummy row to continue line to end of game and from 0 to first event
   for (i in teams){
     apnd <- pbp.sub[1, ]
     apnd$evNum <- with(subset(pbp.sub, primaryTeam == i), max(evNum))
     apnd$totalElapsed <- max(pbp.in$totalElapsed) 
     apnd$primaryTeam <- i
     pbp.sub <- rbind(pbp.sub, apnd)
+    apnd$evNum <- 0
+    apnd$totalElapsed <- 0
+    pbp.sub <- rbind(pbp.sub, apnd)
   }
+
+  goals <- data.frame(goalTime = pbp.in[pbp.in$event == "GOAL", "totalElapsed"],
+                      team = pbp.in[pbp.in$event == "GOAL", "primaryTeam"], 
+                      stringsAsFactors = FALSE)
+  ggplot(data = pbp.sub, aes(totalElapsed, evNum, color = primaryTeam)) + 
+    geom_step(size = 1) + 
+    scale_color_manual(values = team.colors[goals$team]) +
+    geom_vline(data = goals, aes(xintercept = goalTime), color = team.colors[goals$team], 
+               linetype = "longdash") +
+    geom_vline(xintercept = pbp.in[pbp.in$event == "PEND", "totalElapsed"], color = "lightgrey") +
+    ggtitle(paste0(paste0(teams, collapse = " @ "), " Game ", gameId, "\n", 
+                   tolower(paste(paste0(evnt, collapse = ", "))), " count by game time")) +
+    ylab(paste(tolower(paste0(evnt, collapse = ", ")), "count")) +
+    xlab("Game time") +
+    theme(legend.position = c(0, 1), 
+          legend.justification = c(0, 1), 
+          legend.title = element_blank(), 
+          legend.key = element_rect(fill = "white"), 
+          legend.text = element_text(size = 16),
+          axis.title = element_text(size = 16),
+          axis.text = element_text(size = 14), 
+          panel.background = element_rect(color = "black", fill = "white"),
+          plot.background = element_rect(fill = "white", color = "white"),
+          plot.title = element_text(size = 18)) +
+    scale_x_continuous(expand = c(0, .5)) +
+    scale_y_continuous(expand = c(0, .5)) 
   
-  title <- c(paste0(paste0(teams, collapse = " @ "), " Game ", gameId),
-             paste(paste0(event, collapse = " "), "count by game time"))
-  with(subset(pbp.sub, primaryTeam == away), 
-       plot(totalElapsed, evNum, col = team.colors[away], type = "s", lwd = 2, main = title, 
-            ylab = paste(paste0(event, collapse = " "), "count"), xlab = "Game Time"))
-  with(subset(pbp.sub, primaryTeam == home), 
-       lines(totalElapsed, evNum, col = team.colors[home], lwd = 2, type = "s"))
-  
-  for (i in teams){
-    abline(v = as.numeric(gsub(":", ".", 
-                               (pbp.in[pbp.in$event == "GOAL" & pbp.in$primaryTeam == i,
-                                       "totalElapsed"]))), 
-           lty = 2, col = team.colors[i])
-  }
-  
-  legend("topleft", legend = c(home, away), lty = "solid", lwd = 2, 
-         col = c(team.colors[home], team.colors[away]))
 }
 
 season <- 2015
@@ -76,6 +88,4 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
 color.DF <- data.frame(team = as.factor(names(team.colors)), color = team.colors)
 
 corsi <- c("SHOT", "MISS", "BLOCK", "GOAL")
-png("img/2015_20783.png")
 eventPlot(pbp, corsi, "EV")
-dev.off()
