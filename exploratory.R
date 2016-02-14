@@ -81,16 +81,6 @@ eventPlot <- function(pbp.in, evnt, strn){
     scale_y_continuous(expand = c(0, max(pbp.sub$evNum))/300) 
 }
 
-season <- 2015
-gameId <- 20783
-
-pbp <- read.csv(paste0("pbp/", season, "_", gameId, ".pbp"), na.strings = "", 
-                stringsAsFactors = FALSE)
-info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors = FALSE)
-
-home <- info$home
-away <- info$away
-
 # Create vector of each team's primary color for viz
 team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422", 
                 BUF = "#002E62", CGY = "#E03A3E", CAR = "#8E8E90", 
@@ -104,4 +94,14 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 VAN = "#047A4A", WSH = "#CF132B", WPG = "#002E62")
 color.DF <- data.frame(team = as.factor(names(team.colors)), color = team.colors)
 
-eventPlot(pbp, "MISS", "EV")
+season <- 2015
+gameId <- 20813
+
+pbp <- read.csv(paste0("pbp/", season, "_", gameId, ".pbp"), na.strings = "", 
+                stringsAsFactors = FALSE)
+info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors = FALSE)
+
+home <- info$home
+away <- info$away
+
+eventPlot(pbp, "GOAL", "EV")

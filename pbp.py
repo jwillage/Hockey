@@ -183,7 +183,13 @@ while x < len(tokens):
 		temp.append(penType)
 		temp.append(penTime)
 	plays.append(temp)
-	x += 11 # changed from 9 on Windows
+	if(temp[5] != 'GEND'):
+		j = 7
+		while((tokens[x + j] == '\r\n' or tokens[x + j].encode('ascii', 'ignore') == '')):
+			j += 1
+		x += j
+	else:
+		x += 11
 
 info = open('/Users/jw186027/Documents/Personal/Analytics/Sports/Hockey/pbp/' + season + '_' + 
 gameId + '.info', 'w')
