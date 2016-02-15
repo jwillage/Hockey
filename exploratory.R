@@ -47,7 +47,7 @@ eventPlot <- function(pbp.in, evnt, strn){
     pbp.sub <- rbind(pbp.sub, apnd)
     # If looking at faceoffs, don't append 0th event for team that wins opening draw
     if (("FAC" %in% evnt & pbp.in[2, "primaryTeam"] == i))
-      break
+      next
     apnd$evNum <- 0
     apnd$totalElapsed <- 0
     pbp.sub <- rbind(pbp.sub, apnd)
@@ -105,3 +105,4 @@ home <- info$home
 away <- info$away
 
 eventPlot(pbp, "GOAL", "EV")
+ 
