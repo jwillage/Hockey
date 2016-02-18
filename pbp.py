@@ -8,7 +8,7 @@ season = sys.argv[1]
 gameId = sys.argv[2]
 
 page = requests.get('http://www.nhl.com/scores/htmlreports/' + season + str(int(season) + 1) + '/PL0' + gameId + '.HTM')
-# page = requests.get('http://www.nhl.com/scores/htmlreports/20152016/PL020783.HTM')
+# page = requests.get('http://www.nhl.com/scores/htmlreports/20152016/PL020846.HTM')
 tree = html.fromstring(page.text)
 tokens = tree.xpath('//tr[@class="evenColor"]/td/text()')
 away = tree.xpath('//table[position()=1]/tr[position()=3]/td[position()=7]/text()')[0][0:3]
@@ -21,6 +21,7 @@ temp=[]
 # check penl with no break and for pentype, time, st louis
 x = 0
 while x < len(tokens):
+#while len(plays) < 21:
 	temp = tokens[x:x + 6]
 	splitList = tokens[x + 6].split(' ')
 	playerPos = [ i for i, word in enumerate(splitList) if word.startswith('#') ]
@@ -152,32 +153,43 @@ while x < len(tokens):
 	#TODO penalty shot ie 30224 300
 		splitList = tokens[x + 6].encode('ascii', 'replace').split(' ')
 		temp.append(splitList[0]) #team
-		if splitList[playerPos[0] + 1].find('?') != -1:	#single word player
-			temp.append(splitList[playerPos[0] + 1][0:splitList[playerPos[0] + 1].index('?')])	
-			if splitList[splitList.index('min),') - 1].find('?') == -1 : #multi word penalty
-				penType = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('?') + 1 : ] + ' ' + splitList[splitList.index('min),') - 1][0 : splitList[splitList.index('min),') - 1].index('(')]
-				penTime = splitList[splitList.index('min),') - 1][splitList[splitList.index('min),') - 1].index('(') + 1 : ]
+		if splitList[1].find('TEAM') == -1: # Player penalty
+			if splitList[playerPos[0] + 1].find('?') != -1:	#single word player
+				temp.append(splitList[playerPos[0] + 1][0:splitList[playerPos[0] + 1].index('?')])	
+				if splitList[splitList.index('min),') - 1].find('?') == -1 : #multi word penalty
+					penType = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('?') + 1 : ] + ' ' + splitList[splitList.index('min),') - 1][0 : splitList[splitList.index('min),') - 1].index('(')]
+					penTime = splitList[splitList.index('min),') - 1][splitList[splitList.index('min),') - 1].index('(') + 1 : ]
+				else:
+					penType = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('?') + 1 : splitList[playerPos[0] + 1].index('(')]
+					penTime = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('(') + 1 : ]
+			else: #multi word player
+				temp.append(splitList[playerPos[0] + 1] + ' ' + splitList[playerPos[0] + 2][0:splitList[playerPos[0] + 2].index('?')])
+				if splitList[splitList.index('min),') - 1].find('?') == -1 : #multi word penalty
+					penType = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('?') + 1 : ] + ' ' + splitList[splitList.index('min),') - 1][0 : splitList[splitList.index('min),') - 1].index('(')]
+					penTime = splitList[splitList.index('min),') - 1][splitList[splitList.index('min),') - 1].index('(') + 1 : ]
+				else:
+					penType = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('?') + 1 : splitList[playerPos[0] + 2].index('(')]
+					penTime = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('(') + 1 : ]
+			if len(playerPos) > 1:	#if drawn by another player
+				temp.append(splitList[playerPos[1] - 1])	#drawn by player's team name
+				if playerPos[1] + 1 == len(splitList) - 1: #single word player
+					temp.append(splitList[playerPos[1] + 1])
+				else:	#multi word player
+					temp.append(splitList[playerPos[1] + 1] + ' ' + splitList[playerPos[1] + 2])
 			else:
-				penType = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('?') + 1 : splitList[playerPos[0] + 1].index('(')]
-				penTime = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('(') + 1 : ]
-		else: #multi word player
-			temp.append(splitList[playerPos[0] + 1] + ' ' + splitList[playerPos[0] + 2][0:splitList[playerPos[0] + 2].index('?')])
-			if splitList[splitList.index('min),') - 1].find('?') == -1 : #multi word penalty
-				penType = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('?') + 1 : ] + ' ' + splitList[splitList.index('min),') - 1][0 : splitList[splitList.index('min),') - 1].index('(')]
-				penTime = splitList[splitList.index('min),') - 1][splitList[splitList.index('min),') - 1].index('(') + 1 : ]
-			else:
-				penType = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('?') + 1 : splitList[playerPos[0] + 2].index('(')]
-				penTime = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('(') + 1 : ]
-		if len(playerPos) > 1:	#if drawn by another player
-			temp.append(splitList[playerPos[1] - 1])	#drawn by player's team name
-			if playerPos[1] + 1 == len(splitList) - 1: #single word player
-				temp.append(splitList[playerPos[1] + 1])
-			else:	#multi word player
-				temp.append(splitList[playerPos[1] + 1] + ' ' + splitList[playerPos[1] + 2])
-		else:
+				temp.append('')
+				temp.append('')
+			temp.append(splitList[splitList.index('Zone') - 1]) #zone
+		else: # Team penalty
+			temp.append('TEAM')
 			temp.append('')
 			temp.append('')
-		temp.append(splitList[splitList.index('Zone') - 1]) #zone
+			temp.append('')	# Zone not always entered. Always leave blank for consistency 			
+			if splitList[1].find('Too') == -1:
+				penType = 'Unknown'
+			else:
+				penType = 'Too many men'
+			penTime = tokens[x + 6].encode('ascii', 'replace')[tokens[x + 6].find('(') + 1:tokens[x + 6].find('(') + 2]
 		for a in range(0, 4, 1):
 			temp.append('')
 		temp.append(penType)
