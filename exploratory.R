@@ -1,13 +1,13 @@
 library(dplyr)
 
-eventPlot <- function(pbp.in, evnt, strn){
+eventPlot <- function(pbp.in, evnt.in, strn.in){
   # Plot comparison graph given the event type and strength
   #
   # Args:
   #   pbp.in:     pbp object
   #   evnt:       Character vector of event(s) to report on. Valid options are "GOAL", "FAC", 
   #               "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "corsi", "fenwick"
-  #   strn:       Strength. Valid options are "EV", "SH", "PP"
+  #   strn:       Strength. Valid options are "EV", "SH", "PP", "ALL"
   #
   # Returns:
   #  Plots a graph of event comparison by team
@@ -17,21 +17,29 @@ eventPlot <- function(pbp.in, evnt, strn){
   #  Add optl parm to add vline for given event
   #  option for strn == "ALL"
   
-  events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "corsi", "fenwick")
+  events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK")
 
-  if (! evnt %in% events){
+  if (! evnt.in %in% events){
     stop("Event not found in play by play")
   }
   
-  if (evnt == "corsi"){
+  if (evnt.in == "CORSI") {
     evnt <- c("SHOT", "MISS", "BLOCK", "GOAL")
-  }   else if (evnt == "fenwick"){
+  } else if (evnt.in == "FENWICK") {
     evnt <- c("SHOT", "MISS", "GOAL")
+  } else {
+    evnt <- evnt.in
+  }
+  
+  if (strn.in == "ALL") {
+    strn <- c("EV", "PP", "SH")
+  } else {
+    strn <- strn.in
   }
   
   pbp.in$totalElapsed <- as.numeric(gsub(":", ".", pbp.in$totalElapsed))
   # Cumulatively count all the events by primary team
-  pbp.sub <- pbp.in %>%  filter(event %in% evnt, strength == strn) %>% group_by(primaryTeam) %>% 
+  pbp.sub <- pbp.in %>%  filter(event %in% evnt, strength %in% strn) %>% group_by(primaryTeam) %>% 
     mutate(evNum = row_number())
   pbp.sub <- as.data.frame(pbp.sub)
   
@@ -62,10 +70,10 @@ eventPlot <- function(pbp.in, evnt, strn){
     scale_color_manual(values = team.colors[goals$team]) +
     geom_vline(data = goals, aes(xintercept = goalTime), color = team.colors[goals$team], 
                linetype = "longdash") +
-    ggtitle(paste(away, "@", home, info$date, "\n", 
-                   tolower(paste(paste0(evnt, collapse = ", "))), "count by game time,",
-                   strn, "strength")) +
-    ylab(paste(tolower(paste0(evnt, collapse = ", ")), "count")) +
+    ggtitle(paste(away, "@", home, info$date, "\n",
+                  tolower(evnt.in), "count by game time,",
+                  tolower(strn.in), "strength")) +
+    ylab(paste(tolower(evnt.in), "count")) +
     xlab("Game time") +
     theme(legend.position = c(0, 1), 
           legend.justification = c(0, 1), 
@@ -78,7 +86,8 @@ eventPlot <- function(pbp.in, evnt, strn){
           plot.background = element_rect(fill = "white", color = "white"),
           plot.title = element_text(size = 18)) +
     scale_x_continuous(expand = c(0, .5)) +
-    scale_y_continuous(expand = c(0, max(pbp.sub$evNum))/300) 
+    scale_y_continuous(expand = c(0, max(pbp.sub$evNum))/100) +
+    annotate("text", label = "@lustyandlewd", x = 58, y = 1)
 }
 
 # Create vector of each team's primary color for viz
@@ -95,7 +104,7 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
 color.DF <- data.frame(team = as.factor(names(team.colors)), color = team.colors)
 
 season <- 2015
-gameId <- 20844
+gameId <- 20858
 
 pbp <- read.csv(paste0("pbp/", season, "_", gameId, ".pbp"), na.strings = "", 
                 stringsAsFactors = FALSE)
@@ -104,8 +113,4 @@ info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors 
 home <- info$home
 away <- info$away
 
-eventPlot(pbp, "corsi", "EV")
- 
-inputDF <- try(read.table(stdin, sep=DELIMITER, flush=TRUE, 
-                          header=FALSE, quote="", na.strings="",
-                          colClasses=cv), silent=TRUE)
+eventPlot(pbp, "CORSI", "ALL")
