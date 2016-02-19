@@ -95,7 +95,7 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
 color.DF <- data.frame(team = as.factor(names(team.colors)), color = team.colors)
 
 season <- 2015
-gameId <- 20813
+gameId <- 20844
 
 pbp <- read.csv(paste0("pbp/", season, "_", gameId, ".pbp"), na.strings = "", 
                 stringsAsFactors = FALSE)
@@ -104,5 +104,8 @@ info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors 
 home <- info$home
 away <- info$away
 
-eventPlot(pbp, "GOAL", "EV")
+eventPlot(pbp, "corsi", "EV")
  
+inputDF <- try(read.table(stdin, sep=DELIMITER, flush=TRUE, 
+                          header=FALSE, quote="", na.strings="",
+                          colClasses=cv), silent=TRUE)
