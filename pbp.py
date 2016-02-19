@@ -29,6 +29,7 @@ plays = []
 temp=[]
 x = 0
 
+#while len(plays) < 61:
 while x < len(tokens):
 	temp = tokens[x:x + 6]
 	splitList = tokens[x + 6].split(' ')
@@ -155,16 +156,17 @@ while x < len(tokens):
 	elif temp[5] == 'PENL':
 		splitList = tokens[x + 6].encode('ascii', 'replace').split(' ')
 		temp.append(splitList[0]) # Penalized team
+		mindex = [s for s in splitList if 'min' in s][0]
 		if splitList[1].find('TEAM') == -1: # Player penalty
 			if splitList[playerPos[0] + 1].find('?') != -1:	# single word player
 				temp.append(splitList[playerPos[0] + 1][0:splitList[playerPos[0] + 1].index('?')])	
-				if splitList[splitList.index('min),') - 1].find('?') == -1 : # multi word penalty
-				# ok to split during index?
+			#	if splitList[splitList.index('min),') - 1].find('?') == -1 : # multi word penalty if no '?'
+				if splitList[splitList.index(mindex) - 1].find('?') == -1 : # multi word penalty if no '?'
 					penType = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('?') + 1 : ] + \
-					' ' + splitList[splitList.index('min),') - 1] \
-					[0 : splitList[splitList.index('min),') - 1].index('(')]
-					penTime = splitList[splitList.index('min),') - 1] \
-					[splitList[splitList.index('min),') - 1].index('(') + 1 : ]
+					' ' + splitList[splitList.index(mindex) - 1] \
+					[0 : splitList[splitList.index(mindex) - 1].index('(')]
+					penTime = splitList[splitList.index(mindex) - 1] \
+					[splitList[splitList.index(mindex) - 1].index('(') + 1 : ]
 				else:
 					penType = splitList[playerPos[0] + 1] \
 					[splitList[playerPos[0] + 1].index('?') + 1 : splitList[playerPos[0] + 1].index('(')]
@@ -172,11 +174,12 @@ while x < len(tokens):
 			else: # multi word player
 				temp.append(splitList[playerPos[0] + 1] + ' ' + splitList[playerPos[0] + 2] \
 				[0:splitList[playerPos[0] + 2].index('?')])
-				if splitList[splitList.index('min),') - 1].find('?') == -1 : # multi word penalty
+				if splitList[splitList.index(mindex) - 1].find('?') == -1 : # multi word penalty
 					penType = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('?') + 1 : ] + \
-					' ' + splitList[splitList.index('min),') - 1][0 : splitList[splitList.index('min),') - 1].index('(')]
-					penTime = splitList[splitList.index('min),') - 1] \
-					[splitList[splitList.index('min),') - 1].index('(') + 1 : ]
+					' ' + splitList[splitList.index(mindex) - 1] \
+					[0 : splitList[splitList.index(mindex) - 1].index('(')]
+					penTime = splitList[splitList.index(mindex) - 1] \
+					[splitList[splitList.index(mindex) - 1].index('(') + 1 : ]
 				else:
 					penType = splitList[playerPos[0] + 2] \
 					[splitList[playerPos[0] + 2].index('?') + 1 : splitList[playerPos[0] + 2].index('(')]
