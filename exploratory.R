@@ -6,7 +6,7 @@ eventPlot <- function(pbp.in, evnt.in, strn.in){
   # Args:
   #   pbp.in:     pbp object
   #   evnt:       Character vector of event(s) to report on. Valid options are "GOAL", "FAC", 
-  #               "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "corsi", "fenwick"
+  #               "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK"
   #   strn:       Strength. Valid options are "EV", "SH", "PP", "ALL"
   #
   # Returns:
@@ -15,8 +15,7 @@ eventPlot <- function(pbp.in, evnt.in, strn.in){
   # TODO:
   #  Add option for penalties as a colored span
   #  Add optl parm to add vline for given event
-  #  option for strn == "ALL"
-  
+
   events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK")
 
   if (! evnt.in %in% events){
