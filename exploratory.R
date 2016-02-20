@@ -1,13 +1,14 @@
 library(dplyr)
+library(ggplot2)
 
 eventPlot <- function(pbp.in, evnt.in, strn.in){
   # Plot comparison graph given the event type and strength
   #
   # Args:
   #   pbp.in:     pbp object
-  #   evnt:       Character vector of event(s) to report on. Valid options are "GOAL", "FAC", 
+  #   evnt.in:    Character vector of event(s) to report on. Valid options are "GOAL", "FAC", 
   #               "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK"
-  #   strn:       Strength. Valid options are "EV", "SH", "PP", "ALL"
+  #   strn.in:    Strength. Valid options are "EV", "SH", "PP", "ALL"
   #
   # Returns:
   #  Plots a graph of event comparison by team
@@ -15,6 +16,8 @@ eventPlot <- function(pbp.in, evnt.in, strn.in){
   # TODO:
   #  Add option for penalties as a colored span
   #  Add optl parm to add vline for given event
+  #  Handle teams with similar primary colors
+  #  Add logic for penalties that don't last their full duration due to goal scored, addl penalties
 
   events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK")
 
@@ -60,10 +63,17 @@ eventPlot <- function(pbp.in, evnt.in, strn.in){
     pbp.sub <- rbind(pbp.sub, apnd)
   }
 
+  penl.idx <-pbp.in$event == "PENL"
+  penalties <- data.frame(penStart = pbp.in[penl.idx, "totalElapsed"],
+                          primaryTeam = pbp.in[penl.idx, "primaryTeam"],
+                          length = pbp.in[penl.idx, "penTime"],
+                          strength = pbp.in[penl.idx, "strength"], 
+                          stringsAsFactors = FALSE)
+  penalties$penEnd <- penalties$penStart + as.numeric(penalties$length)
   goals <- data.frame(goalTime = pbp.in[pbp.in$event == "GOAL", "totalElapsed"],
                       team = pbp.in[pbp.in$event == "GOAL", "primaryTeam"], 
                       stringsAsFactors = FALSE)
-  ggplot(data = pbp.sub, aes(totalElapsed, evNum, color = primaryTeam)) + 
+  g <- ggplot(data = pbp.sub, aes(totalElapsed, evNum, color = primaryTeam)) + 
     geom_vline(xintercept = pbp.in[pbp.in$event == "PEND", "totalElapsed"], color = "lightgrey") +
     geom_step(size = 1) + 
     scale_color_manual(values = team.colors[goals$team]) +
@@ -86,7 +96,16 @@ eventPlot <- function(pbp.in, evnt.in, strn.in){
           plot.title = element_text(size = 18)) +
     scale_x_continuous(expand = c(0, .5)) +
     scale_y_continuous(expand = c(0, max(pbp.sub$evNum))/100) +
-    annotate("text", label = "@lustyandlewd", x = 58, y = 1)
+    annotate("text", label = "@lustyandlewd", x = 58, y = 1) 
+
+  pens <- list()
+  for (i in 1:nrow(penalties)) {
+   pens[[i]] <- geom_area(data = melt(penalties[i, ], id = c("primaryTeam", "strength", "length")),
+                          aes(x = value, y = max(pbp.sub$evNum)), position = "stack", alpha = 0.1, 
+                          fill = team.colors[penalties[i, "primaryTeam"]], show.legend = FALSE) 
+  }
+  g + unlist(pens)
+   
 }
 
 # Create vector of each team's primary color for viz
@@ -112,4 +131,4 @@ info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors 
 home <- info$home
 away <- info$away
 
-eventPlot(pbp, "CORSI", "ALL")
+eventPlot(pbp, "CORSI", "EV")
