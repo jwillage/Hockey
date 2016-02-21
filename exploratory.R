@@ -1,7 +1,8 @@
 library(dplyr)
 library(ggplot2)
+library(reshape2)
 
-eventPlot <- function(pbp.in, evnt.in, strn.in){
+eventPlot <- function(pbp.in, evnt.in, strn.in, show.pen = TRUE){
   # Plot comparison graph given the event type and strength
   #
   # Args:
@@ -9,12 +10,12 @@ eventPlot <- function(pbp.in, evnt.in, strn.in){
   #   evnt.in:    Character vector of event(s) to report on. Valid options are "GOAL", "FAC", 
   #               "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK"
   #   strn.in:    Strength. Valid options are "EV", "SH", "PP", "ALL"
+  #   show.pen:   TRUE or FALSE indicating whether or not to display penalty spans
   #
   # Returns:
   #  Plots a graph of event comparison by team
   #
   # TODO:
-  #  Add option for penalties as a colored span
   #  Add optl parm to add vline for given event
   #  Handle teams with similar primary colors
   #  Add logic for penalties that don't last their full duration due to goal scored, addl penalties
@@ -63,13 +64,6 @@ eventPlot <- function(pbp.in, evnt.in, strn.in){
     pbp.sub <- rbind(pbp.sub, apnd)
   }
 
-  penl.idx <-pbp.in$event == "PENL"
-  penalties <- data.frame(penStart = pbp.in[penl.idx, "totalElapsed"],
-                          primaryTeam = pbp.in[penl.idx, "primaryTeam"],
-                          length = pbp.in[penl.idx, "penTime"],
-                          strength = pbp.in[penl.idx, "strength"], 
-                          stringsAsFactors = FALSE)
-  penalties$penEnd <- penalties$penStart + as.numeric(penalties$length)
   goals <- data.frame(goalTime = pbp.in[pbp.in$event == "GOAL", "totalElapsed"],
                       team = pbp.in[pbp.in$event == "GOAL", "primaryTeam"], 
                       stringsAsFactors = FALSE)
@@ -96,16 +90,27 @@ eventPlot <- function(pbp.in, evnt.in, strn.in){
           plot.title = element_text(size = 18)) +
     scale_x_continuous(expand = c(0, .5)) +
     scale_y_continuous(expand = c(0, max(pbp.sub$evNum))/100) +
-    annotate("text", label = "@lustyandlewd", x = 58, y = 1) 
+    annotate("text", label = "@lustyandlewd", x = (max(pbp.in$totalElapsed) / 1.07)
+             , y = max(pbp.sub$evNum)/50) 
 
-  pens <- list()
-  for (i in 1:nrow(penalties)) {
-   pens[[i]] <- geom_area(data = melt(penalties[i, ], id = c("primaryTeam", "strength", "length")),
-                          aes(x = value, y = max(pbp.sub$evNum)), position = "stack", alpha = 0.1, 
-                          fill = team.colors[penalties[i, "primaryTeam"]], show.legend = FALSE) 
+  if (show.pen) {
+    penl.idx <-pbp.in$event == "PENL"
+    penalties <- data.frame(penStart = pbp.in[penl.idx, "totalElapsed"],
+                            primaryTeam = pbp.in[penl.idx, "primaryTeam"],
+                            length = pbp.in[penl.idx, "penTime"],
+                            strength = pbp.in[penl.idx, "strength"], 
+                            stringsAsFactors = FALSE)
+    penalties$penEnd <- penalties$penStart + as.numeric(penalties$length)
+    pens <- list()
+    for (i in 1:nrow(penalties)) {
+     pens[[i]] <- geom_area(data = melt(penalties[i, ], id = c("primaryTeam", "strength", "length")),
+                            aes(x = value, y = max(pbp.sub$evNum)), position = "stack", alpha = 0.1, 
+                            fill = team.colors[penalties[i, "primaryTeam"]], show.legend = FALSE) 
+    }
+    g <- g + unlist(pens)
   }
-  g + unlist(pens)
-   
+  
+  g 
 }
 
 # Create vector of each team's primary color for viz
@@ -114,7 +119,7 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 CHI = "#E3263A", COL = "#8B2942", CBJ = "#00285C", 
                 DAL = "#006A4E", DET = "#EC1F26", EDM = "#E66A20", 
                 FLA = "#C8213F", `L.A` = "#AFB7BA", MIN = "#025736", 
-                MTL = "#213770", NSH = "#FDBB2F", NJD = "#E03A3E", 
+                MTL = "#213770", NSH = "#FDBB2F", `N.J` = "#E03A3E", 
                 NYI = "#F57D31", NYR = "#0161AB", OTT = "#D69F0F", 
                 PHI = "#F47940", PIT = "#D1BD80", `S.J` = "#05535D", 
                 STL = "#0546A0", TBL = "#013E7D", TOR = "#003777", 
@@ -131,4 +136,4 @@ info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors 
 home <- info$home
 away <- info$away
 
-eventPlot(pbp, "CORSI", "EV")
+eventPlot(pbp, "PENL", "ALL", show.pen = FALSE)
