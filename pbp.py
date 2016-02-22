@@ -156,11 +156,10 @@ while x < len(tokens):
 		if splitList[1].find('TEAM') == -1: # Player penalty
 			if splitList[playerPos[0] + 1].find('?') != -1:	# single word player
 				temp.append(splitList[playerPos[0] + 1][0:splitList[playerPos[0] + 1].index('?')])	
-			#	if splitList[splitList.index('min),') - 1].find('?') == -1 : # multi word penalty if no '?'
 				if splitList[splitList.index(mindex) - 1].find('?') == -1 : # multi word penalty if no '?'
 					penType = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('?') + 1 : ] + \
 					          ' ' + splitList[splitList.index(mindex) - 1] \
-					                  [0 : splitList[splitList.index(mindex) - 1].index('(')]
+					                [0 : splitList[splitList.index(mindex) - 1].index('(')]
 					penTime = splitList[splitList.index(mindex) - 1] \
 					[splitList[splitList.index(mindex) - 1].index('(') + 1 : ]
 				else:
@@ -183,6 +182,7 @@ while x < len(tokens):
 					          splitList[playerPos[0] + 2].index('(')]
 					penTime = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('(') + 1 : ]
 			if len(playerPos) > 1:	# if penalty was drawn by another player
+			if (tokens[x + 6].find('Drawn') != -1):
 				temp.append(splitList[playerPos[1] - 1])	# drawn by player's team name
 				if playerPos[1] + 1 == len(splitList) - 1: # single word player
 					temp.append(splitList[playerPos[1] + 1])
