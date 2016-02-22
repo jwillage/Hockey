@@ -2,34 +2,30 @@ from lxml import html
 import requests
 import sys
 import re
+import argparse
 
-# TODO
-# check penl with no break and for pentype, time, st louis
-# do single word/multi word logic upfront
-# Fix FAC losing home team, for 2014 30224 317, try append(splitList[splitList.index('vs') + 1])
-# Fix and add mutli word stoppage reasons
-# Can stoppage be grouped in with GEND
-# Support for major penalties, and game misconducts (30224  265, 269), penalty shots
-# Support for multi-word penalty (30226)
-
-#implement default args
-season = sys.argv[1]
-gameId = sys.argv[2]
+parser = argparse.ArgumentParser(description='Process PBP file')
+parser.add_argument('season', type = str, \
+                    help = 'Beginning year of season, ie \'2015\' for the 2015-2016 season')
+parser.add_argument('gameId', type = str, \
+                    help = 'NHL game Id, used for Official Game Reports, ie \'20858\'')
+args = parser.parse_args()
+season = args.season
+gameId = args.gameId
 
 page = requests.get('http://www.nhl.com/scores/htmlreports/' + season + str(int(season) + 1) + \
-'/PL0' + gameId + '.HTM')
+                    '/PL0' + gameId + '.HTM')
 # page = requests.get('http://www.nhl.com/scores/htmlreports/20152016/PL020846.HTM')
 tree = html.fromstring(page.text)
 tokens = tree.xpath('//tr[@class="evenColor"]/td/text()')
 away = tree.xpath('//table[position()=1]/tr[position()=3]/td[position()=7]/text()')[0][0:3]
 home = tree.xpath('//table[position()=1]/tr[position()=3]/td[position()=8]/text()')[0][0:3]
 date = tree.xpath('//table/tr/td/table/tr/td/table/tr/td[position()=2]/table/' \
-'tr[position()=4]/td/text()')[1].split(', ', 1)[1]
+                  'tr[position()=4]/td/text()')[1].split(', ', 1)[1]
 plays = []
 temp=[]
 x = 0
 
-#while len(plays) < 61:
 while x < len(tokens):
 	temp = tokens[x:x + 6]
 	splitList = tokens[x + 6].split(' ')
@@ -115,7 +111,7 @@ while x < len(tokens):
 			temp.append(splitList[playerPos[0] + 1][0 : -1].encode('ascii', 'ignore'))
 		else:	# multi word player
 			temp.append(splitList[playerPos[0] + 1].encode('ascii', 'ignore') + ' ' + \
-			splitList[playerPos[0] + 2][0 : -1].encode('ascii', 'ignore'))
+			            splitList[playerPos[0] + 2][0 : -1].encode('ascii', 'ignore'))
 		temp.extend(('', ''))
 		temp.append(splitList[-2].encode('ascii', 'ignore'))	# zone
 	elif temp[5] == 'PSTR' or temp[5] == 'PEND' or temp[5] == 'GEND': 
@@ -130,7 +126,7 @@ while x < len(tokens):
 			temp.append(splitList[playerPos[0] + 1][0 : splitList[playerPos[0] + 1].index('(')])
 		else:	# multi word player
 			temp.append(splitList[playerPos[0] + 1] + ' ' + \
-			splitList[playerPos[0] + 2][0 : splitList[playerPos[0] + 1].index('(')])
+			            splitList[playerPos[0] + 2][0 : splitList[playerPos[0] + 1].index('(')])
 		temp.extend(('', ''))
 		temp.append(splitList[4])	# zone
 		temp.append(splitList[3][:-1])	# shot type
@@ -143,13 +139,13 @@ while x < len(tokens):
 				temp.append(assists[playerPos[0] + 1][0 : assists[playerPos[0] + 1].index('(')])
 			else:	#multi word player
 				temp.append(assists[playerPos[0] + 1] + ' ' + \
-				assists[playerPos[0] + 2][0 : assists[playerPos[0] + 2].index('(')])
+				            assists[playerPos[0] + 2][0 : assists[playerPos[0] + 2].index('(')])
 			if tokens[x + 7][6:7] == 's':
 				if assists[playerPos[1] + 1][-1] == ')':	# single word player
 					temp.append(assists[playerPos[1] + 1][0 : assists[playerPos[1] + 1].index('(')])
 				else:	#multi word player
 					temp.append(assists[playerPos[1] + 1] + ' ' + \
-					assists[playerPos[1] + 2][0 : assists[playerPos[1] + 1].index('(')])
+					            assists[playerPos[1] + 2][0 : assists[playerPos[1] + 1].index('(')])
 			else:
 				temp.append('')
 			x += 1
@@ -163,26 +159,28 @@ while x < len(tokens):
 			#	if splitList[splitList.index('min),') - 1].find('?') == -1 : # multi word penalty if no '?'
 				if splitList[splitList.index(mindex) - 1].find('?') == -1 : # multi word penalty if no '?'
 					penType = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('?') + 1 : ] + \
-					' ' + splitList[splitList.index(mindex) - 1] \
-					[0 : splitList[splitList.index(mindex) - 1].index('(')]
+					          ' ' + splitList[splitList.index(mindex) - 1] \
+					                  [0 : splitList[splitList.index(mindex) - 1].index('(')]
 					penTime = splitList[splitList.index(mindex) - 1] \
 					[splitList[splitList.index(mindex) - 1].index('(') + 1 : ]
 				else:
 					penType = splitList[playerPos[0] + 1] \
-					[splitList[playerPos[0] + 1].index('?') + 1 : splitList[playerPos[0] + 1].index('(')]
+					            [splitList[playerPos[0] + 1].index('?') + 1 : \
+					            splitList[playerPos[0] + 1].index('(')]
 					penTime = splitList[playerPos[0] + 1][splitList[playerPos[0] + 1].index('(') + 1 : ]
 			else: # multi word player
 				temp.append(splitList[playerPos[0] + 1] + ' ' + splitList[playerPos[0] + 2] \
-				[0:splitList[playerPos[0] + 2].index('?')])
+				            [0:splitList[playerPos[0] + 2].index('?')])
 				if splitList[splitList.index(mindex) - 1].find('?') == -1 : # multi word penalty
 					penType = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('?') + 1 : ] + \
-					' ' + splitList[splitList.index(mindex) - 1] \
-					[0 : splitList[splitList.index(mindex) - 1].index('(')]
+					          ' ' + splitList[splitList.index(mindex) - 1] \
+					          [0 : splitList[splitList.index(mindex) - 1].index('(')]
 					penTime = splitList[splitList.index(mindex) - 1] \
-					[splitList[splitList.index(mindex) - 1].index('(') + 1 : ]
+					          [splitList[splitList.index(mindex) - 1].index('(') + 1 : ]
 				else:
 					penType = splitList[playerPos[0] + 2] \
-					[splitList[playerPos[0] + 2].index('?') + 1 : splitList[playerPos[0] + 2].index('(')]
+					          [splitList[playerPos[0] + 2].index('?') + 1 : \
+					          splitList[playerPos[0] + 2].index('(')]
 					penTime = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('(') + 1 : ]
 			if len(playerPos) > 1:	# if penalty was drawn by another player
 				temp.append(splitList[playerPos[1] - 1])	# drawn by player's team name
@@ -201,7 +199,7 @@ while x < len(tokens):
 			else:
 				penType = 'Too many men'
 			penTime = tokens[x + 6].encode('ascii', 'replace') \
-			[tokens[x + 6].find('(') + 1:tokens[x + 6].find('(') + 2]
+			          [tokens[x + 6].find('(') + 1:tokens[x + 6].find('(') + 2]
 		temp.extend(('', '', '', ''))
 		temp.append(penType)
 		temp.append(penTime)
@@ -225,8 +223,8 @@ f = open('/Users/jw186027/Documents/Personal/Analytics/Sports/Hockey/pbp/' + sea
     '.pbp', 'w')
 cnt = 0
 f.write('totalElapsed,id,per,strength,elapsed,remaining,event,primaryTeam,primaryPlayer,' \
-'secondaryTeam,secondaryPlayer,zone,shotType,distance,miss,stop,penType,penTime,firstAssist,' \
-'secondAssist\r\n')
+        'secondaryTeam,secondaryPlayer,zone,shotType,distance,miss,stop,penType,penTime,' \
+        'firstAssist,secondAssist\r\n')
 
 while cnt < len(plays):
 	fieldCnt = 0
