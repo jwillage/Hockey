@@ -106,14 +106,13 @@ while x < len(tokens):
 			temp.append(splitList[-2]) # distance
 			temp.append(splitList[5])	# result 
 	elif temp[5] == 'GIVE' or temp[5] == 'TAKE':
-		temp.append(splitList[0][:3].encode('ascii', 'ignore'))	# giveaway team
+		temp.append(splitList[0][:3])	# giveaway team
 		if splitList[playerPos[0] + 1].endswith(','):	# single word player
-			temp.append(splitList[playerPos[0] + 1][0 : -1].encode('ascii', 'ignore'))
+			temp.append(splitList[playerPos[0] + 1][0 : -1])
 		else:	# multi word player
-			temp.append(splitList[playerPos[0] + 1].encode('ascii', 'ignore') + ' ' + \
-			            splitList[playerPos[0] + 2][0 : -1].encode('ascii', 'ignore'))
+			temp.append(splitList[playerPos[0] + 1] + ' ' + splitList[playerPos[0] + 2][0 : -1])
 		temp.extend(('', ''))
-		temp.append(splitList[-2].encode('ascii', 'ignore'))	# zone
+		temp.append(splitList[-2])	# zone
 	elif temp[5] == 'PSTR' or temp[5] == 'PEND' or temp[5] == 'GEND': 
 		temp[2] = ''
 	elif temp[5] == 'STOP': 
@@ -150,7 +149,7 @@ while x < len(tokens):
 				temp.append('')
 			x += 1
 	elif temp[5] == 'PENL':
-		splitList = tokens[x + 6].encode('ascii', 'replace').split(' ')
+		splitList = tokens[x + 6].split(' ')
 		temp.append(splitList[0]) # Penalized team
 		mindex = [s for s in splitList if 'min' in s][0]
 		if splitList[1].find('TEAM') == -1: # Player penalty
@@ -181,7 +180,6 @@ while x < len(tokens):
 					          [splitList[playerPos[0] + 2].index('?') + 1 : \
 					          splitList[playerPos[0] + 2].index('(')]
 					penTime = splitList[playerPos[0] + 2][splitList[playerPos[0] + 2].index('(') + 1 : ]
-			if len(playerPos) > 1:	# if penalty was drawn by another player
 			if (tokens[x + 6].find('Drawn') != -1):
 				temp.append(splitList[playerPos[1] - 1])	# drawn by player's team name
 				if playerPos[1] + 1 == len(splitList) - 1: # single word player
@@ -198,15 +196,14 @@ while x < len(tokens):
 				penType = 'Unknown'
 			else:
 				penType = 'Too many men'
-			penTime = tokens[x + 6].encode('ascii', 'replace') \
-			          [tokens[x + 6].find('(') + 1:tokens[x + 6].find('(') + 2]
+			penTime = tokens[x + 6][tokens[x + 6].find('(') + 1:tokens[x + 6].find('(') + 2]
 		temp.extend(('', '', '', ''))
 		temp.append(penType)
 		temp.append(penTime)
 	plays.append(temp)
 	if(temp[5] != 'GEND'):
 		j = 7
-		while((tokens[x + j] == '\r\n' or tokens[x + j].encode('ascii', 'ignore') == '')):
+		while((tokens[x + j] == '\r\n' or tokens[x + j] == '')):
 			j += 1
 		x += j
 	else:
