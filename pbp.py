@@ -149,7 +149,7 @@ while x < len(tokens):
 				temp.append('')
 			x += 1
 	elif temp[5] == 'PENL':
-		splitList = tokens[x + 6].split(' ')
+		splitList = tokens[x + 6].encode('ascii', 'replace').split(' ')
 		temp.append(splitList[0]) # Penalized team
 		mindex = [s for s in splitList if 'min' in s][0]
 		if splitList[1].find('TEAM') == -1: # Player penalty
