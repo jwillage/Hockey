@@ -19,6 +19,7 @@ eventPlot <- function(pbp.in, evnt.in, strn.in, show.pen = TRUE){
   #  Add optl parm to add vline for given event
   #  Handle teams with similar primary colors
   #  Add logic for penalties that don't last their full duration due to goal scored, addl penalties
+  #  Add support for vector of events, strengths
 
   events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK")
 
@@ -113,7 +114,7 @@ eventPlot <- function(pbp.in, evnt.in, strn.in, show.pen = TRUE){
   g 
 }
 
-# Create vector of each team's primary color for viz
+# Create vector of each team's primary/secondary color for viz
 team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422", 
                 BUF = "#002E62", CGY = "#E03A3E", CAR = "#8E8E90", 
                 CHI = "#E3263A", COL = "#8B2942", CBJ = "#00285C", 
@@ -122,12 +123,36 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 MTL = "#213770", NSH = "#FDBB2F", `N.J` = "#E03A3E", 
                 NYI = "#F57D31", NYR = "#0161AB", OTT = "#D69F0F", 
                 PHI = "#F47940", PIT = "#D1BD80", `S.J` = "#05535D", 
-                STL = "#0546A0", TBL = "#013E7D", TOR = "#003777", 
-                VAN = "#047A4A", WSH = "#CF132B", WPG = "#002E62")
+                STL = "#0546A0", `T.B` = "#013E7D", TOR = "#003777", 
+                VAN = "#047A4A", WSH = "#CF132B", WPG = "#002E62",
+                ANA.alt = "#000000", ARI.alt = "#EFE1C6", BOS.alt = "#000000", 
+                BUF.alt = "#FDBB2F", CGY.alt = "#FFC758", CAR.alt = "#E03A3E", 
+                CHI.alt = "#000000", COL.alt = "#01548A", CBJ.alt = "#E03A3E", 
+                DAL.alt = "#000000", DET.alt = "#EC1F26", EDM.alt = "#003777", 
+                FLA.alt = "#D59C05", L.A.alt = "#000000", MIN.alt = "#BF2B37", 
+                MTL.alt = "#BF2F38", NSH.alt = "#002E62", N.J.alt = "#000000", 
+                NYI.alt = "#00529B", NYR.alt = "#E6393F", OTT.alt = "#E4173E", 
+                PHI.alt = "#000000", PIT.alt = "#000000", S.J.alt = "#F38F20", 
+                STL.alt = "#FFC325", T.B.alt = "#C0C0C0", TOR.alt = "#003777", 
+                VAN.alt = "#07346F", WSH.alt = "#00214E", WPG.alt = "#A8A9AD"
+                )
 color.DF <- data.frame(team = as.factor(names(team.colors)), color = team.colors)
 
+colorDiff <- function(x, y) {
+  cols <- col2rgb(c(x, y))
+  sum((cols[, 1] - cols[, 2]) ^ 2) ^ 0.5
+}
+
+combinations <- unlist(strsplit(levels(interaction(names(team.colors), names(team.colors))), ".", 
+                                fixed = TRUE))
+combinations <- unlist(strsplit(levels(interaction(color.DF$team, color.DF$team)), ".", 
+                                fixed = TRUE))
+df <- data.frame(matrix(unlist(combinations), ncol = 2, byrow = TRUE), stringsAsFactors = FALSE)
+df$diff <- Vectorize(colorDiff)(team.colors[df$X1], team.colors[df$X2])
+
+
 season <- 2015
-gameId <- 20858
+gameId <- 20930
 
 pbp <- read.csv(paste0("pbp/", season, "_", gameId, ".pbp"), na.strings = "", 
                 stringsAsFactors = FALSE)
@@ -136,4 +161,9 @@ info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors 
 home <- info$home
 away <- info$away
 
-eventPlot(pbp, "PENL", "ALL", show.pen = FALSE)
+home.col <- team.colors[home]
+away.col <- ifelse (colorDiff(team.colors[home], team.colors[away]) > 80,
+                    team.colors[away],
+                    team.colors[paste0(away, ".alt")])
+
+eventPlot(pbp, "CORSI", "EV", show.pen = TRUE)
