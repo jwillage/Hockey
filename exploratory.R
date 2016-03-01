@@ -2,7 +2,7 @@ library(dplyr)
 library(ggplot2)
 library(reshape2)
 
-eventPlot <- function(pbp.in, evnt.in, strn.in, show.pen = TRUE){
+eventPlot <- function(pbp.in, evnt.in, strn.in, colors.in, show.pen = TRUE){
   # Plot comparison graph given the event type and strength
   #
   # Args:
@@ -10,6 +10,8 @@ eventPlot <- function(pbp.in, evnt.in, strn.in, show.pen = TRUE){
   #   evnt.in:    Character vector of event(s) to report on. Valid options are "GOAL", "FAC", 
   #               "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK"
   #   strn.in:    Strength. Valid options are "EV", "SH", "PP", "ALL"
+  #   colors.in:  Vector of length 2 containing the colors to be used for plotting, with 
+  #               value names == team names. 
   #   show.pen:   TRUE or FALSE indicating whether or not to display penalty spans
   #
   # Returns:
@@ -71,8 +73,8 @@ eventPlot <- function(pbp.in, evnt.in, strn.in, show.pen = TRUE){
   g <- ggplot(data = pbp.sub, aes(totalElapsed, evNum, color = primaryTeam)) + 
     geom_vline(xintercept = pbp.in[pbp.in$event == "PEND", "totalElapsed"], color = "lightgrey") +
     geom_step(size = 1) + 
-    scale_color_manual(values = team.colors[goals$team]) +
-    geom_vline(data = goals, aes(xintercept = goalTime), color = team.colors[goals$team], 
+    scale_color_manual(values = colors.in[goals$team]) +
+    geom_vline(data = goals, aes(xintercept = goalTime), color = colors.in[goals$team], 
                linetype = "longdash") +
     ggtitle(paste(away, "@", home, info$date, "\n",
                   tolower(evnt.in), "count by game time,",
@@ -106,13 +108,29 @@ eventPlot <- function(pbp.in, evnt.in, strn.in, show.pen = TRUE){
     for (i in 1:nrow(penalties)) {
      pens[[i]] <- geom_area(data = melt(penalties[i, ], id = c("primaryTeam", "strength", "length")),
                             aes(x = value, y = max(pbp.sub$evNum)), position = "stack", alpha = 0.1, 
-                            fill = team.colors[penalties[i, "primaryTeam"]], show.legend = FALSE) 
+                            fill = colors.in[penalties[i, "primaryTeam"]], show.legend = FALSE) 
     }
     g <- g + unlist(pens)
   }
   
   g 
 }
+
+colorDiff <- function(x, y) {
+  # Calculate the distance between colors
+  #
+  # Args:
+  #   x:  RGB hex color
+  #   y:  The other RGB hex color
+  #
+  # Returns:
+  #  Integer value denoting the RGB Euclidean distance between colors
+  #
+  
+  cols <- col2rgb(c(x, y))
+  sum((cols[, 1] - cols[, 2]) ^ 2) ^ 0.5
+}
+
 
 # Create vector of each team's primary/secondary color for viz
 team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422", 
@@ -136,20 +154,6 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 STL.alt = "#FFC325", T.B.alt = "#C0C0C0", TOR.alt = "#003777", 
                 VAN.alt = "#07346F", WSH.alt = "#00214E", WPG.alt = "#A8A9AD"
                 )
-color.DF <- data.frame(team = as.factor(names(team.colors)), color = team.colors)
-
-colorDiff <- function(x, y) {
-  cols <- col2rgb(c(x, y))
-  sum((cols[, 1] - cols[, 2]) ^ 2) ^ 0.5
-}
-
-combinations <- unlist(strsplit(levels(interaction(names(team.colors), names(team.colors))), ".", 
-                                fixed = TRUE))
-combinations <- unlist(strsplit(levels(interaction(color.DF$team, color.DF$team)), ".", 
-                                fixed = TRUE))
-df <- data.frame(matrix(unlist(combinations), ncol = 2, byrow = TRUE), stringsAsFactors = FALSE)
-df$diff <- Vectorize(colorDiff)(team.colors[df$X1], team.colors[df$X2])
-
 
 season <- 2015
 gameId <- 20930
@@ -161,9 +165,10 @@ info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors 
 home <- info$home
 away <- info$away
 
-home.col <- team.colors[home]
 away.col <- ifelse (colorDiff(team.colors[home], team.colors[away]) > 80,
                     team.colors[away],
                     team.colors[paste0(away, ".alt")])
+gameColors <- c(team.colors[home], away.col)
+names(gameColors)[2] <- info$away
 
-eventPlot(pbp, "CORSI", "EV", show.pen = TRUE)
+eventPlot(pbp, "CORSI", "EV", gameColors, show.pen = TRUE)
