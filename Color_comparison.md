@@ -27,8 +27,8 @@ axis(2, at = seq(0.5, 29.5, by = 1), labels = names(team.colors[1:30]), las = 2)
 
 for (i in 1:30){
   for (j in 1:30){
-    polygon(c(i - 1, i, i, i - 1), c(j - 1, j - 1, j, j - 1), col = team.colors[j])
-    polygon(c(j, j - 1, j - 1, j), c(i, i, i - 1, i), col = team.colors[j])
+    polygon(c(i, i - 1, i - 1, i), c(j, j, j - 1, j), col = team.colors[j])
+    polygon(c(j - 1, j, j, j - 1), c(i - 1, i - 1, i, i - 1), col = team.colors[j])
   }
 }
 
