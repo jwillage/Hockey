@@ -131,6 +131,20 @@ colorDiff <- function(x, y) {
   sum((cols[, 1] - cols[, 2]) ^ 2) ^ 0.5
 }
 
+colorInv <- function(x) {
+  # Finds the inverse of a color
+  #
+  # Args:
+  #   x:  RGB hex color
+  #
+  # Returns:
+  #  Inverse hexadecimal character representation of the input string
+  #
+  
+  inv <- as.hexmode(255 - col2rgb(x))
+  paste0("#", paste0(inv, collapse = ""))
+}
+
 
 # Create vector of each team's primary/secondary color for viz
 team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422", 
@@ -172,3 +186,17 @@ gameColors <- c(team.colors[home], away.col)
 names(gameColors)[2] <- info$away
 
 eventPlot(pbp, "CORSI", "EV", gameColors, show.pen = TRUE)
+
+
+i <- 1:(length(team.colors)/2)
+plot(c(1, i - 1), c(1, i - 1), type = "n", xlab = "", ylab = "",main = "team col test")
+for (i in 1:(length(team.colors)/2)){
+  for (j in 1:(length(team.colors)/2)){
+ #  polygon(c((i-1)+j, i+j, i+j, (i-1)+j), c(i-1, i-1, i, i-1), col = team.colors[i])
+ #  polygon(c(i, i-1, i-1, i), c(i+j, i+j, i-1+j, i+j), col = team.colors[i])
+   polygon(c((i-1), i, i, (i-1)), c(j-1, j-1, j, j-1), col = team.colors[j])
+   polygon(c(j, j-1, j-1, j), c(i, i, i-1, i), col = team.colors[j])
+
+  }
+}
+
