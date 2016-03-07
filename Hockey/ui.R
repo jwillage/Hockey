@@ -41,7 +41,7 @@ shinyUI(
       column(3, offset = 0,
              br(), br(),br(),
              numericInput("season", "Season", value = 2015, min = 2013, max = 2015),
-             numericInput("gameId", "Game ID", value = 20883, min = 20001, max = 20883),
+             numericInput("gameId", "Game ID", value = 20973, min = 20002, max = 20984),
              selectInput("event", "Event", choices = c("Corsi", "Fenwick", "Goal", "Faceoff", 
                                                        "Penalty", "Block", "Shot","Miss", 
                                                        "Giveaway", "Takeaway")),
