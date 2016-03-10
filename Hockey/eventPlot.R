@@ -22,7 +22,6 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
   #  Plots a graph of event comparison by team
   #
   # TODO:
-  #  Add logic for penalties that don't last their full duration due to goal scored, addl penalties
   #  Add support for vector of events, strengths
 
   events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK",
@@ -144,7 +143,18 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
                             length = pbp.in[penl.idx, "penTime"],
                             strength = pbp.in[penl.idx, "strength"], 
                             stringsAsFactors = FALSE)
+    
     penalties$penEnd <- penalties$penStart + as.numeric(penalties$length)
+    # check for abbreviated penalties
+    for (i in 1:nrow(penalties)) {
+      penSpan <- seq(penalties[i, "penStart"], penalties[i, "penEnd"], by = 0.01)
+      penSpan <- as.numeric(as.character(penSpan))
+      pp <- goals$goalTime %in% penSpan
+      if (sum(pp)) {
+        penalties[i, "penEnd"] <- goals[pp, "goalTime"]
+      }
+    }
+    
     pens <- list()
     for (i in 1:nrow(penalties)) {
      pens[[i]] <- geom_area(data = melt(penalties[i, ], id = c("primaryTeam", "strength", "length")),
