@@ -1,4 +1,3 @@
-# Shiny
 library(dplyr)
 library(ggplot2)
 library(reshape2)
@@ -25,7 +24,8 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
   #  Add logic for penalties that don't last their full duration due to goal scored, addl penalties
   #  Add support for vector of events, strengths
 
-  events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK")
+  events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK",
+              "HIT")
   evnt.in <- switch(evnt.in,
                     "Goal" = "GOAL",
                     "Faceoff" = "FAC",
@@ -36,13 +36,9 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
                     "Giveaway" = "GIVE",
                     "Takeaway" = "TAKE",
                     "Corsi" = "CORSI",
-                    "Fenwick" = "FENWICK"
+                    "Fenwick" = "FENWICK",
+                    "Hit" = "HIT"
                     )
-
-  if (! evnt.in %in% events){
-    stop("Event not found in play by play")
-  }
-  
   if (evnt.in == "CORSI") {
     evnt <- c("SHOT", "MISS", "BLOCK", "GOAL")
   } else if (evnt.in == "FENWICK") {
@@ -50,7 +46,7 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
   } else {
     evnt <- evnt.in
   }
-  
+
   strn.in <- switch(strn.in,
                     "All" = "ALL",
                     "Even" = "EV",
@@ -159,11 +155,11 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 BUF = "#002E62", CGY = "#E03A3E", CAR = "#8E8E90", 
                 CHI = "#E3263A", COL = "#8B2942", CBJ = "#00285C", 
                 DAL = "#006A4E", DET = "#EC1F26", EDM = "#E66A20", 
-                FLA = "#C8213F", `L.A` = "#AFB7BA", MIN = "#025736", 
-                MTL = "#213770", NSH = "#FDBB2F", `N.J` = "#E03A3E", 
+                FLA = "#C8213F", L.A = "#AFB7BA", MIN = "#025736", 
+                MTL = "#213770", NSH = "#FDBB2F", N.J = "#E03A3E", 
                 NYI = "#F57D31", NYR = "#0161AB", OTT = "#D69F0F", 
-                PHI = "#F47940", PIT = "#D1BD80", `S.J` = "#05535D", 
-                STL = "#0546A0", `T.B` = "#013E7D", TOR = "#003777", 
+                PHI = "#F47940", PIT = "#D1BD80", S.J = "#05535D", 
+                STL = "#0546A0", T.B = "#013E7D", TOR = "#003777", 
                 VAN = "#047A4A", WSH = "#CF132B", WPG = "#002E62",
                 ANA.alt = "#000000", ARI.alt = "#EFE1C6", BOS.alt = "#000000", 
                 BUF.alt = "#FDBB2F", CGY.alt = "#FFC758", CAR.alt = "#E03A3E", 
@@ -176,3 +172,22 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 STL.alt = "#FFC325", T.B.alt = "#C0C0C0", TOR.alt = "#003777", 
                 VAN.alt = "#07346F", WSH.alt = "#00214E", WPG.alt = "#A8A9AD"
                 )
+# 
+# season <- 2015
+# gameId <- 20877
+# 
+# pbp <- read.csv(paste0("pbp/", season, "_", gameId, ".pbp"), na.strings = "", 
+#                 stringsAsFactors = FALSE)
+# info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors = FALSE)
+# 
+# home <- info$home
+# away <- info$away
+# 
+# away.col <- ifelse (colorDiff(team.colors[home], team.colors[away]) > 80,
+#                     team.colors[away],
+#                     team.colors[paste0(away, ".alt")])
+# gameColors <- c(team.colors[home], away.col)
+# names(gameColors)[2] <- info$away
+# 
+# eventPlot(pbp, info, "Hit", "Power Play", gameColors, show.pen = TRUE)
+

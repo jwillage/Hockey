@@ -44,7 +44,7 @@ shinyUI(
              numericInput("gameId", "Game ID", value = 20973, min = 20002, max = 20984),
              selectInput("event", "Event", choices = c("Corsi", "Fenwick", "Goal", "Faceoff", 
                                                        "Penalty", "Block", "Shot","Miss", 
-                                                       "Giveaway", "Takeaway")),
+                                                       "Giveaway", "Takeaway", "Hit")),
              selectInput("strength", "Strength", choices = c("Even", "Power Play", "Short Handed",
                                                              "All")),
              #submitButton("Go"),
