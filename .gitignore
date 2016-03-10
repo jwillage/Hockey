@@ -1,3 +1,11 @@
 *.bak
 *.html
 *.wip.*
+*.Rproj*
+.RData
+.Rapp.history
+.Rhistory
+Color_comparison.Rmd
+pbp
+
+.Rproj.user
