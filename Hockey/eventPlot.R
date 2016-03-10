@@ -2,25 +2,26 @@ library(dplyr)
 library(ggplot2)
 library(reshape2)
 
-eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = TRUE){
+eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = TRUE, 
+                      vline.in = NULL){
   # Plot comparison graph given the event type and strength
   #
   # Args:
   #   pbp.in:     pbp object
   #   info.in:    info object
-  #   evnt.in:    Character vector of event(s) to report on. Valid options are "GOAL", "FAC", 
-  #               "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK"
-  #   strn.in:    Strength. Valid options are "EV", "SH", "PP", "ALL"
+  #   evnt.in:    Character vector of event(s) to report on. Valid options are "Goal", "Faceoff", 
+  #               "Penalty", "Block", "Shot", "Miss", "Giveaway", "Takeaway", "Corsi", "Fenwick"
+  #   strn.in:    Strength. Valid options are "Even", "Short Handed", "Power Play", "All"
   #   colors.in:  Vector of length 2 containing the colors to be used for plotting, with 
   #               value names == team names. 
   #   show.pen:   TRUE or FALSE indicating whether or not to display penalty spans
+  #   vline.in:   An optional event that will be displayed as vertical lines on the plot. Accepts
+  #               same options as evnt.in except corsi and fenwick.
   #
   # Returns:
   #  Plots a graph of event comparison by team
   #
   # TODO:
-  #  Add optl parm to add vline for given event
-  #  Handle teams with similar primary colors
   #  Add logic for penalties that don't last their full duration due to goal scored, addl penalties
   #  Add support for vector of events, strengths
 
@@ -89,12 +90,33 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
   goals <- data.frame(goalTime = pbp.in[pbp.in$event == "GOAL", "totalElapsed"],
                       team = pbp.in[pbp.in$event == "GOAL", "primaryTeam"], 
                       stringsAsFactors = FALSE)
+  
+  if (! is.null(vline.in)) {
+    vline.in <- switch(vline.in,
+                      "Goal" = "GOAL",
+                      "Faceoff" = "FAC",
+                      "Penalty" = "PENL",
+                      "Block" = "BLOCK",
+                      "Shot" = "SHOT",
+                      "Miss" = "MISS",
+                      "Giveaway" = "GIVE",
+                      "Takeaway" = "TAKE",
+                      "Hit" = "HIT")
+    tmp <- data.frame(tmpTime = pbp.in[pbp.in$event == vline.in, "totalElapsed"],
+                      team = pbp.in[pbp.in$event == vline.in, "primaryTeam"], 
+                      stringsAsFactors = FALSE)
+    vline <- geom_vline(data = tmp, aes(xintercept = tmpTime), color = colors.in[tmp$team]) 
+  } else {
+    vline <- NULL
+  }
+  
   g <- ggplot(data = pbp.sub, aes(totalElapsed, evNum, color = primaryTeam)) + 
     geom_vline(xintercept = pbp.in[pbp.in$event == "PEND", "totalElapsed"], color = "lightgrey") +
+    vline + 
     geom_step(size = 1) + 
     scale_color_manual(values = colors.in[goals$team]) +
     geom_vline(data = goals, aes(xintercept = goalTime), color = colors.in[goals$team], 
-               linetype = "longdash") +
+               linetype = "longdash", size = 0.5) +
     ggtitle(paste(away, "@", home, info.in$date, "\n",
                   tolower(evnt.in), "count by game time,",
                   tolower(strn.in), "strength")) +
@@ -183,11 +205,11 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
 # home <- info$home
 # away <- info$away
 # 
-# away.col <- ifelse (colorDiff(team.colors[home], team.colors[away]) > 80,
-#                     team.colors[away],
-#                     team.colors[paste0(away, ".alt")])
-# gameColors <- c(team.colors[home], away.col)
-# names(gameColors)[2] <- info$away
-# 
-# eventPlot(pbp, info, "Hit", "Power Play", gameColors, show.pen = TRUE)
+#  away.col <- ifelse (colorDiff(team.colors[home], team.colors[away]) > 80,
+#                      team.colors[away],
+#                      team.colors[paste0(away, ".alt")])
+#  gameColors <- c(team.colors[home], away.col)
+#  names(gameColors)[2] <- info$away
+#  
+#  eventPlot(pbp, info, "Corsi", "All", gameColors, show.pen = TRUE, vline = NULL)
 
