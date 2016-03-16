@@ -354,7 +354,7 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
   #   pbp.in:     pbp object
   #   info.in:    info object
   #   evnt.in:    Character vector of event(s) to report on. Valid options are 'GOAL', 'FAC', 
-  #               'PENL', 'BLOCK', 'SHOT', 'MISS', 'GIVE', 'TAKE', 'CORSI', 'FENWICK'
+  #               'PENL', 'BLOCK', 'SHOT', 'MISS', 'GIVE', 'TAKE', 'CORSI', 'FENWICK', 'HIT'
   #   strn.in:    Strength. Valid options are 'EV', 'SH', 'PP', 'ALL'
   #   colors.in:  Vector of length 2 containing the colors to be used for plotting, with 
   #               value names == team names. 
@@ -364,9 +364,6 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
   #  Plots a graph of event comparison by team
   #
   # TODO:
-  #  Add optl parm to add vline for given event
-  #  Handle teams with similar primary colors
-  #  Add logic for penalties that don't last their full duration due to goal scored, addl penalties
   #  Add support for vector of events, strengths
   
   events <- c('GOAL', 'FAC', 'PENL', 'BLOCK', 'SHOT', 'MISS', 'GIVE', 'TAKE', 'CORSI', 'FENWICK')

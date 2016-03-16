@@ -10,7 +10,8 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
   #   pbp.in:     pbp object
   #   info.in:    info object
   #   evnt.in:    Character vector of event(s) to report on. Valid options are "Goal", "Faceoff", 
-  #               "Penalty", "Block", "Shot", "Miss", "Giveaway", "Takeaway", "Corsi", "Fenwick"
+  #               "Penalty", "Block", "Shot", "Miss", "Giveaway", "Takeaway", "Corsi", "Fenwick",
+  #               "Hit"
   #   strn.in:    Strength. Valid options are "Even", "Short Handed", "Power Play", "All"
   #   colors.in:  Vector of length 2 containing the colors to be used for plotting, with 
   #               value names == team names. 
@@ -143,6 +144,8 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
                             length = pbp.in[penl.idx, "penTime"],
                             strength = pbp.in[penl.idx, "strength"], 
                             stringsAsFactors = FALSE)
+    # Clean up misc characters 
+    penalties$length <- as.numeric(gsub("[^0-9]", "", penalties$length))
     
     penalties$penEnd <- penalties$penStart + as.numeric(penalties$length)
     # check for abbreviated penalties
@@ -206,7 +209,7 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 )
 # 
 # season <- 2015
-# gameId <- 20877
+# gameId <- 20973
 # 
 # pbp <- read.csv(paste0("pbp/", season, "_", gameId, ".pbp"), na.strings = "", 
 #                 stringsAsFactors = FALSE)

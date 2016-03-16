@@ -1,4 +1,4 @@
-source("exploratory.R")
+source("eventPlot.R")
 
 shinyServer(
   function(input, output, session) {
