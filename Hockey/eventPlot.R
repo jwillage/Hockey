@@ -66,8 +66,7 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
   pbp.in$totalElapsed <- as.numeric(gsub(":", ".", pbp.in$totalElapsed))
   # Cumulatively count all the events by primary team
   pbp.sub <- pbp.in %>%  filter(event %in% evnt, strength %in% strn) %>% group_by(primaryTeam) %>% 
-    mutate(evNum = row_number())
-  pbp.sub <- as.data.frame(pbp.sub)
+    mutate(evNum = row_number()) %>% as.data.frame()
   
   # Append dummy row to continue line to end of game and from 0 to first event
   for (i in c(away, home)){
@@ -116,7 +115,7 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
     geom_step(size = 1) + 
     scale_color_manual(values = colors.in[goals$team]) +
     geom_vline(data = goals, aes(xintercept = goalTime), color = colors.in[goals$team], 
-               linetype = "longdash", size = 0.5) +
+               linetype = "longdash", size = 1) +
     ggtitle(paste(away, "@", home, info.in$date, "\n",
                   tolower(evnt.in), "count by game time,",
                   tolower(strn.in), "strength")) +
@@ -135,7 +134,7 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
     scale_x_continuous(expand = c(0, .5)) +
     scale_y_continuous(expand = c(0, max(pbp.sub$evNum))/100) +
     annotate("text", label = "@lustyandlewd", x = (max(pbp.in$totalElapsed) / 1.07)
-             , y = max(pbp.sub$evNum)/50) 
+             , y = max(pbp.sub$evNum) / 50) 
 
   if (show.pen) {
     penl.idx <-pbp.in$event == "PENL"
@@ -146,6 +145,7 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
                             stringsAsFactors = FALSE)
     # Clean up misc characters 
     penalties$length <- as.numeric(gsub("[^0-9]", "", penalties$length))
+    penalties <- penalties[complete.cases(penalties), ]
     
     penalties$penEnd <- penalties$penStart + as.numeric(penalties$length)
     # check for abbreviated penalties
