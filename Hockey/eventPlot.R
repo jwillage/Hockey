@@ -1,3 +1,4 @@
+#local
 library(dplyr)
 library(ggplot2)
 library(reshape2)
@@ -24,40 +25,40 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
   #
   # TODO:
   #  Add support for vector of events, strengths
-
+  
   events <- c("GOAL", "FAC", "PENL", "BLOCK", "SHOT", "MISS", "GIVE", "TAKE", "CORSI", "FENWICK",
               "HIT")
-  evnt.in <- switch(evnt.in,
-                    "Goal" = "GOAL",
-                    "Faceoff" = "FAC",
-                    "Penalty" = "PENL",
-                    "Block" = "BLOCK",
-                    "Shot" = "SHOT",
-                    "Miss" = "MISS",
-                    "Giveaway" = "GIVE",
-                    "Takeaway" = "TAKE",
-                    "Corsi" = "CORSI",
-                    "Fenwick" = "FENWICK",
-                    "Hit" = "HIT"
-                    )
-  if (evnt.in == "CORSI") {
+  evnt.pbp <- switch(evnt.in,
+                     "Goal" = "GOAL",
+                     "Faceoff" = "FAC",
+                     "Penalty" = "PENL",
+                     "Block" = "BLOCK",
+                     "Shot" = "SHOT",
+                     "Miss" = "MISS",
+                     "Giveaway" = "GIVE",
+                     "Takeaway" = "TAKE",
+                     "Corsi" = "CORSI",
+                     "Fenwick" = "FENWICK",
+                     "Hit" = "HIT"
+  )
+  if (evnt.pbp == "CORSI") {
     evnt <- c("SHOT", "MISS", "BLOCK", "GOAL")
-  } else if (evnt.in == "FENWICK") {
+  } else if (evnt.pbp == "FENWICK") {
     evnt <- c("SHOT", "MISS", "GOAL")
   } else {
-    evnt <- evnt.in
+    evnt <- evnt.pbp
   }
-
-  strn.in <- switch(strn.in,
-                    "All" = "ALL",
-                    "Even" = "EV",
-                    "Power Play" = "PP",
-                    "Short Handed" = "SH"
-              )
-  if (strn.in == "ALL") {
+  
+  strn.pbp <- switch(strn.in,
+                     "All" = "ALL",
+                     "Even" = "EV",
+                     "PowerPlay" = "PP",
+                     "ShortHanded" = "SH"
+  )
+  if (strn.pbp == "ALL") {
     strn <- c("EV", "PP", "SH")
   } else {
-    strn <- strn.in
+    strn <- strn.pbp
   }
   
   home <- info.in$home
@@ -74,7 +75,7 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
     apnd$evNum <- ifelse(nrow(pbp.sub[pbp.sub$primaryTeam == i, ]) > 0,
                          max(pbp.sub[pbp.sub$primaryTeam == i, "evNum"]), 
                          0
-                  )
+    )
     apnd$totalElapsed <- max(pbp.in$totalElapsed) 
     apnd$primaryTeam <- i
     pbp.sub <- rbind(pbp.sub, apnd)
@@ -85,22 +86,22 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
     apnd$totalElapsed <- 0
     pbp.sub <- rbind(pbp.sub, apnd)
   }
-
+  
   goals <- data.frame(goalTime = pbp.in[pbp.in$event == "GOAL", "totalElapsed"],
                       team = pbp.in[pbp.in$event == "GOAL", "primaryTeam"], 
                       stringsAsFactors = FALSE)
   
   if (! is.null(vline.in)) {
     vline.in <- switch(vline.in,
-                      "Goal" = "GOAL",
-                      "Faceoff" = "FAC",
-                      "Penalty" = "PENL",
-                      "Block" = "BLOCK",
-                      "Shot" = "SHOT",
-                      "Miss" = "MISS",
-                      "Giveaway" = "GIVE",
-                      "Takeaway" = "TAKE",
-                      "Hit" = "HIT")
+                       "Goal" = "GOAL",
+                       "Faceoff" = "FAC",
+                       "Penalty" = "PENL",
+                       "Block" = "BLOCK",
+                       "Shot" = "SHOT",
+                       "Miss" = "MISS",
+                       "Giveaway" = "GIVE",
+                       "Takeaway" = "TAKE",
+                       "Hit" = "HIT")
     tmp <- data.frame(tmpTime = pbp.in[pbp.in$event == vline.in, "totalElapsed"],
                       team = pbp.in[pbp.in$event == vline.in, "primaryTeam"], 
                       stringsAsFactors = FALSE)
@@ -113,13 +114,13 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
     geom_vline(xintercept = pbp.in[pbp.in$event == "PEND", "totalElapsed"], color = "lightgrey") +
     vline + 
     geom_step(size = 1) + 
-    scale_color_manual(values = colors.in[goals$team]) +
+    scale_color_manual(values = colors.in) +
     geom_vline(data = goals, aes(xintercept = goalTime), color = colors.in[goals$team], 
                linetype = "longdash", size = 1) +
     ggtitle(paste(away, "@", home, info.in$date, "\n",
-                  tolower(evnt.in), "count by game time,",
-                  tolower(strn.in), "strength")) +
-    ylab(paste(tolower(evnt.in), "count")) +
+                  evnt.in, "count,",
+                  strn.in, "strength")) +
+    ylab(paste(evnt.in, "count")) +
     xlab("Game time") +
     theme(legend.position = c(0, 1), 
           legend.justification = c(0, 1), 
@@ -133,9 +134,9 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
           plot.title = element_text(size = 18)) +
     scale_x_continuous(expand = c(0, .5)) +
     scale_y_continuous(expand = c(0, max(pbp.sub$evNum))/100) +
-    annotate("text", label = "@lustyandlewd", x = (max(pbp.in$totalElapsed) / 1.07)
+    annotate("text", label = "@coldanalytics", x = (max(pbp.in$totalElapsed) / 1.08)
              , y = max(pbp.sub$evNum) / 50) 
-
+  
   if (show.pen) {
     penl.idx <-pbp.in$event == "PENL"
     penalties <- data.frame(penStart = pbp.in[penl.idx, "totalElapsed"],
@@ -154,15 +155,23 @@ eventPlot <- function(pbp.in, info.in, evnt.in, strn.in, colors.in, show.pen = T
       penSpan <- as.numeric(as.character(penSpan))
       pp <- goals$goalTime %in% penSpan
       if (sum(pp)) {
-        penalties[i, "penEnd"] <- goals[pp, "goalTime"]
+        #not always first. match up first pen with first goal, second pen with second goal, etc
+        #handle penalties which turn up with start time == end time
+        penalties[i, "penEnd"] <- goals[pp, "goalTime"][1]
       }
     }
     
     pens <- list()
     for (i in 1:nrow(penalties)) {
-     pens[[i]] <- geom_area(data = melt(penalties[i, ], id = c("primaryTeam", "strength", "length")),
-                            aes(x = value, y = max(pbp.sub$evNum)), position = "stack", alpha = 0.1, 
-                            fill = colors.in[penalties[i, "primaryTeam"]], show.legend = FALSE) 
+      dat <- melt(penalties[i, ], id = c("primaryTeam", "strength", "length"))
+      if (dat[1, "value"] == dat[2, "value"]) {
+        # penalties that occur at the same time as a goal mess up geom height, add a phony second
+        # problem should not occur after fixing the above sum(pp) block
+        dat[2, "value"] <- dat[2, "value"] + 0.01
+      }
+      pens[[i]] <- geom_area(data = dat,
+                             aes(x = value, y = max(pbp.sub$evNum)), position = "stack", alpha = 0.1, 
+                             fill = colors.in[penalties[i, "primaryTeam"]], show.legend = FALSE) 
     }
     g <- g + unlist(pens)
   }
@@ -199,30 +208,16 @@ team.colors = c(ANA = "#91764B", ARI = "#841F27", BOS = "#FFC422",
                 ANA.alt = "#000000", ARI.alt = "#EFE1C6", BOS.alt = "#000000", 
                 BUF.alt = "#FDBB2F", CGY.alt = "#FFC758", CAR.alt = "#E03A3E", 
                 CHI.alt = "#000000", COL.alt = "#01548A", CBJ.alt = "#E03A3E", 
-                DAL.alt = "#000000", DET.alt = "#EC1F26", EDM.alt = "#003777", 
+                DAL.alt = "#000000", DET.alt = "#C1C1C1", EDM.alt = "#003777", 
                 FLA.alt = "#D59C05", L.A.alt = "#000000", MIN.alt = "#BF2B37", 
                 MTL.alt = "#BF2F38", NSH.alt = "#002E62", N.J.alt = "#000000", 
                 NYI.alt = "#00529B", NYR.alt = "#E6393F", OTT.alt = "#E4173E", 
                 PHI.alt = "#000000", PIT.alt = "#000000", S.J.alt = "#F38F20", 
                 STL.alt = "#FFC325", T.B.alt = "#C0C0C0", TOR.alt = "#003777", 
-                VAN.alt = "#07346F", WSH.alt = "#00214E", WPG.alt = "#A8A9AD"
-                )
-# 
-# season <- 2015
-# gameId <- 20973
-# 
-# pbp <- read.csv(paste0("pbp/", season, "_", gameId, ".pbp"), na.strings = "", 
-#                 stringsAsFactors = FALSE)
-# info <- read.csv(paste0("pbp/", season, "_", gameId, ".info"), stringsAsFactors = FALSE)
-# 
-# home <- info$home
-# away <- info$away
-# 
-#  away.col <- ifelse (colorDiff(team.colors[home], team.colors[away]) > 80,
-#                      team.colors[away],
-#                      team.colors[paste0(away, ".alt")])
-#  gameColors <- c(team.colors[home], away.col)
-#  names(gameColors)[2] <- info$away
-#  
-#  eventPlot(pbp, info, "Corsi", "All", gameColors, show.pen = TRUE, vline = NULL)
+                VAN.alt = "#07346F", WSH.alt = "#00214E", WPG.alt = "#A8A9AD",
+                SWE = "#FFF033", FIN = "#E2231A", NAT = "#CF132B", EUR = "#002d62",
+                RUS = "#ff0000", CZE = "#222f63", USA = "#002c61", CAN = "#e21737",
+                SWE.alt = "#00539b", FIN.alt = "#E2D101", NAT.alt = "#000000", EUR.alt = "#01A5E2",
+                RUS.alt = "#0175E2", CZE.alt = "#CF132B", USA.alt = "#D50000", CAN.alt = "#5b5b5b"
+)
 
