@@ -22,12 +22,15 @@ away = tree.xpath('//table[position()=1]/tr[position()=3]/td[position()=7]/text(
 home = tree.xpath('//table[position()=1]/tr[position()=3]/td[position()=8]/text()')[0][0:3]
 date = tree.xpath('//table/tr/td/table/tr/td/table/tr/td[position()=2]/table/' \
                   'tr[position()=4]/td/text()')[1].split(', ', 1)[1]
+shootoutFlag = False
 plays = []
 temp=[]
 x = 0
 while x < len(tokens):
     try:
     	temp = tokens[x:x + 6]
+	if not temp[0].isdigit():
+		raise ValueError('errorrrr')
     	splitList = tokens[x + 6].split(' ')
     	playerPos = [ i for i, word in enumerate(splitList) if word.startswith('#') ]
     	if temp[5] == 'SHOT':
@@ -126,7 +129,7 @@ while x < len(tokens):
     			temp.append(splitList[playerPos[0] + 1][0 : splitList[playerPos[0] + 1].index('(')])
     		else:	# multi word player
     			temp.append(splitList[playerPos[0] + 1] + ' ' + \
-    			            splitList[playerPos[0] + 2][0 : splitList[playerPos[0] + 1].index('(')])
+    			            splitList[playerPos[0] + 2][0 : splitList[playerPos[0] + 2].index('(')])
     		temp.extend(('', ''))
     		temp.append(splitList[4])	# zone
     		temp.append(splitList[3][:-1])	# shot type
@@ -145,7 +148,7 @@ while x < len(tokens):
     					temp.append(assists[playerPos[1] + 1][0 : assists[playerPos[1] + 1].index('(')])
     				else:	#multi word player
     					temp.append(assists[playerPos[1] + 1] + ' ' + \
-    					            assists[playerPos[1] + 2][0 : assists[playerPos[1] + 1].index('(')])
+    					            assists[playerPos[1] + 2][0 : assists[playerPos[1] + 2].index('(')])
     			else:
     				temp.append('')
     			x += 1
@@ -202,10 +205,12 @@ while x < len(tokens):
     		temp.extend(('', '', '', ''))
     		temp.append(penType)
     		temp.append(penTime)
+        elif temp[5] == 'SOC':
+		shootoutFlag = True	
     	plays.append(temp)
    	if(temp[5] != 'GEND'):
     		j = 7
-    		while((tokens[x + j] == '\r\n' or tokens[x + j].encode('ascii', 'ignore') == '')):
+                while((x + j) < len(tokens) and (tokens[x + j] == '\r\n' or tokens[x + j].encode('ascii', 'ignore') == '')):
     			j += 1
     		x += j
     	else:
@@ -236,8 +241,11 @@ f.write('totalElapsed,id,per,strength,elapsed,remaining,event,primaryTeam,primar
 while cnt < len(plays):
 	fieldCnt = 0
 	#convert period elapsed time to game elapsed time
-	f.write(str(((int(plays[cnt][1])-1)*20) +  int(plays[cnt][3][0 : plays[cnt][3].index(':')])) + 
-	':' + 	str(plays[cnt][3][plays[cnt][3].index(':') + 1 : ]) + ', ')
+	if int(plays[cnt][1]) == 5 and shootoutFlag:
+		f.write("65:00, ")
+	else:
+		f.write(str(((int(plays[cnt][1])-1)*20) +  int(plays[cnt][3][0 : plays[cnt][3].index(':')])) + 
+		':' + 	str(plays[cnt][3][plays[cnt][3].index(':') + 1 : ]) + ', ')
 	while fieldCnt < len(plays[cnt]):
 		f.write(plays[cnt][fieldCnt].encode('utf-8'))
 		if fieldCnt != len(plays[cnt])- 1:
