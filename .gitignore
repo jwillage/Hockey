@@ -1,0 +1,15 @@
+img/
+Hockey-Models/
+shotdistance.R
+pens_following_loss.R
+*.bak
+*.html
+*.wip.*
+*.Rproj*
+.RData
+.Rapp.history
+.Rhistory
+Color_comparison.Rmd
+pbp
+.Rproj.user
+.httr-oauth
